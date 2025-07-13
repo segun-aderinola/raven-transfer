@@ -23,23 +23,6 @@ A fintech money transfer application built with Node.js, Express, TypeScript, an
 - **Testing**: Jest, Supertest
 - **Architecture**: Object-Oriented Programming (OOP) with TypeScript
 
-## Project Structure
-
-```
-src/
-├── config/           # Database and app configuration
-├── controllers/      # Request handlers
-├── services/         # Business logic
-├── models/          # Database models
-├── routes/          # API routes
-├── middleware/      # Custom middleware
-├── validators/      # Request validation
-├── dto/            # Data Transfer Objects
-├── types/          # TypeScript type definitions
-├── interfaces/     # TypeScript interfaces
-├── database/       # Migrations and seeds
-└── tests/          # Test files
-```
 
 ## Installation
 
@@ -58,9 +41,6 @@ src/
 - `npm start` - Start production server
 - `npm run migrate` - Run database migrations
 - `npm run migrate:rollback` - Rollback database migrations
-- `npm test` - Run tests
-- `npm run test:watch` - Run tests in watch mode
-- `npm run type-check` - Type check without emitting files
 
 ## API Endpoints
 
@@ -85,19 +65,6 @@ src/
 ### Utility
 - `GET /api/health` - Health check endpoint
 
-## TypeScript Features
-
-- **Strict Type Checking**: Full TypeScript strict mode enabled
-- **Interfaces**: Comprehensive interfaces for all data structures
-- **Type Safety**: Complete type coverage throughout the application
-- **Path Mapping**: Clean import paths using TypeScript path mapping
-- **Generics**: Type-safe database operations using generics
-- **Enums and Union Types**: For transaction statuses, user statuses, etc.
-
-## Testing
-
-Run tests: `npm test`
-Run tests in watch mode: `npm run test:watch`
 
 ## Environment Variables
 
@@ -106,14 +73,14 @@ NODE_ENV=development
 PORT=3000
 DB_HOST=localhost
 DB_PORT=3306
-DB_NAME=money_transfer_app
-DB_USER=your_db_user
-DB_PASSWORD=your_db_password
-JWT_SECRET=your_jwt_secret_key_here
+DB_NAME=raven_pay
+DB_USER=root
+DB_PASSWORD=
+JWT_SECRET=ravenpay
 RAVEN_API_KEY=your_raven_api_key
 RAVEN_SECRET_KEY=your_raven_secret_key
 RAVEN_BASE_URL=https://integrations.getravenbank.com
-WEBHOOK_URL=https://your-webhook-url.com/webhook
+WEBHOOK_URL=https://webhook-url.com/webhook
 ```
 
 ## Development
@@ -125,149 +92,189 @@ WEBHOOK_URL=https://your-webhook-url.com/webhook
 5. Run database migrations with `npm run migrate`
 6. Start the development server with `npm run dev`
 
-## Type Safety
+## System Architecture Flow
+graph TB
+    subgraph "Client Layer"
+        A[Mobile/Web Client]
+        B[Postman/API Testing]
+    end
+    
+    subgraph "API Gateway Layer"
+        C[Express.js Server]
+        D[Rate Limiting]
+        E[Authentication Middleware]
+        F[Validation Middleware]
+    end
+    
+    subgraph "Business Logic Layer"
+        G[Auth Controller]
+        H[Transaction Controller]
+        I[Bank Account Controller]
+        J[Webhook Controller]
+        
+        K[Auth Service]
+        L[Transaction Service]
+        M[Bank Account Service]
+        N[Webhook Service]
+        O[Raven Service]
+    end
+    
+    subgraph "Data Layer"
+        P[User Model]
+        Q[Transaction Model]
+        R[Bank Account Model]
+        S[Webhook Model]
+        T[MySQL Database]
+    end
+    
+    subgraph "External Services"
+        U[Raven Atlas API]
+        V[Webhook.site]
+        W[External Banks]
+    end
+    
+    A --> C
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+    F --> G
+    F --> H
+    F --> I
+    F --> J
+    
+    G --> K
+    H --> L
+    I --> M
+    J --> N
+    
+    K --> P
+    L --> Q
+    L --> P
+    M --> R
+    N --> S
+    
+    L --> O
+    M --> O
+    O --> U
+    U --> W
+    U --> V
+    V --> J
+    
+    P --> T
+    Q --> T
+    R --> T
+    S --> T
 
-This application leverages TypeScript's type system to provide:
-- Compile-time error checking
-- IntelliSense support in IDEs
-- Interface-driven development
-- Type-safe database operations
-- Strict null checks
-- No implicit any types
 
-## License
+## Money Transfer Flow Diagram
+sequenceDiagram
+    participant Client
+    participant API
+    participant TransactionService
+    participant RavenService
+    participant Database
+    participant RavenAPI
+    participant ExternalBank
+    participant Webhook
+    
+    Note over Client, Webhook: Money Transfer Process
+    
+    Client->>API: POST /api/transactions/transfer
+    API->>API: Authenticate & Validate
+    API->>TransactionService: initiateTransfer(userId, transferData)
+    
+    TransactionService->>Database: Check user balance
+    Database-->>TransactionService: Balance: ₦1000
+    
+    TransactionService->>RavenService: verifyAccount(recipientAccount)
+    RavenService->>RavenAPI: GET /accounts/verify
+    RavenAPI-->>RavenService: Account valid
+    RavenService-->>TransactionService: Verification success
+    
+    TransactionService->>Database: Create transaction (status: pending)
+    Database-->>TransactionService: Transaction created
+    
+    TransactionService->>RavenService: initiateTransfer(transferData)
+    RavenService->>RavenAPI: POST /transfers
+    RavenAPI-->>RavenService: Transfer initiated
+    RavenService-->>TransactionService: Raven transaction ID
+    
+    TransactionService->>Database: Update transaction (status: processing)
+    TransactionService->>Database: Deduct from user balance
+    TransactionService-->>API: Transaction response
+    API-->>Client: Transfer initiated successfully
+    
+    Note over RavenAPI, ExternalBank: Raven processes transfer
+    RavenAPI->>ExternalBank: Transfer ₦500
+    ExternalBank-->>RavenAPI: Transfer completed
+    
+    RavenAPI->>Webhook: POST /webhook (transfer.successful)
+    Webhook->>API: Webhook notification
+    API->>TransactionService: processWebhook()
+    TransactionService->>Database: Update transaction (status: completed)
 
-MIT License
-EOF
+## User Registration & Virtual Account Creation Flow
+sequenceDiagram
+    participant Client
+    participant API
+    participant AuthService
+    participant BankAccountService
+    participant RavenService
+    participant Database
+    participant RavenAPI
+    
+    Client->>API: POST /api/auth/register
+    API->>API: Validate registration data
+    API->>AuthService: register(userData)
+    
+    AuthService->>Database: Check if user exists
+    Database-->>AuthService: User not found
+    
+    AuthService->>Database: Create new user
+    Database-->>AuthService: User created (ID: 123)
+    
+    AuthService->>BankAccountService: createVirtualAccount(user)
+    BankAccountService->>RavenService: createVirtualAccount(userInfo)
+    RavenService->>RavenAPI: POST /accounts
+    RavenAPI-->>RavenService: Virtual account created
+    RavenService-->>BankAccountService: Account details
+    
+    BankAccountService->>Database: Save bank account details
+    Database-->>BankAccountService: Bank account saved
+    BankAccountService-->>AuthService: Virtual account created
+    
+    AuthService->>AuthService: Generate JWT token
+    AuthService-->>API: {user, token}
+    API-->>Client: Registration successful + token
 
-# 20. Create startup script
-cat > start.sh << 'EOF'
-#!/bin/bash
-
-echo "🚀 Starting Money Transfer App (TypeScript) Setup..."
-
-# Check if Node.js is installed
-if ! command -v node &> /dev/null; then
-    echo "❌ Node.js is not installed. Please install Node.js first."
-    exit 1
-fi
-
-# Check if npm is installed
-if ! command -v npm &> /dev/null; then
-    echo "❌ npm is not installed. Please install npm first."
-    exit 1
-fi
-
-# Install dependencies
-echo "📦 Installing dependencies..."
-npm install
-
-# Check TypeScript installation
-if ! command -v npx tsc &> /dev/null; then
-    echo "❌ TypeScript is not installed. Installing TypeScript..."
-    npm install -g typescript
-fi
-
-# Check if MySQL is running (optional check)
-echo "🔍 Checking MySQL connection..."
-if command -v mysql &> /dev/null; then
-    echo "✅ MySQL is available"
-else
-    echo "⚠️  MySQL command not found. Make sure MySQL is installed and running."
-fi
-
-# Create logs directory
-mkdir -p logs
-
-# Copy environment file if it doesn't exist
-if [ ! -f .env ]; then
-    cp .env.example .env
-    echo "📝 Created .env file from .env.example"
-    echo "⚠️  Please update the .env file with your actual configuration"
-fi
-
-# Build TypeScript
-echo "🔨 Building TypeScript..."
-npm run build
-
-echo "
-✅ Setup completed!
-
-Next steps:
-1. Update your .env file with actual database and API credentials
-2. Create your MySQL database: CREATE DATABASE money_transfer_app;
-3. Run migrations: npm run migrate
-4. Start development server: npm run dev
-
-Environment file location: .env
-Build output: dist/
-Database migrations: npm run migrate
-Start server: npm run dev
-Run tests: npm test
-Type checking: npm run type-check
-
-📚 Check README.md for detailed setup instructions
-"
-EOF
-
-chmod +x start.sh
-
-echo "
-🎉 MONEY TRANSFER APP (TYPESCRIPT) SETUP COMPLETE!
-
-📁 All TypeScript files and directories have been created successfully.
-
-🚀 TO START THE APPLICATION:
-
-1. First, run the setup script:
-   ./start.sh
-
-2. Update your .env file with actual credentials:
-   - Database connection details
-   - Raven Atlas API keys
-   - JWT secret key
-   - Webhook URL
-
-3. Create MySQL database:
-   mysql -u root -p
-   CREATE DATABASE money_transfer_app;
-
-4. Build TypeScript:
-   npm run build
-
-5. Run database migrations:
-   npm run migrate
-
-6. Start the development server:
-   npm run dev
-
-🔧 TYPESCRIPT COMMANDS:
-
-   npm install          # Install dependencies
-   npm run build        # Build TypeScript to JavaScript
-   npm run dev          # Start development server with hot reload
-   npm run migrate      # Run database migrations
-   npm test            # Run tests
-   npm start           # Start production server
-   npm run type-check  # Type check without building
-
-📖 TypeScript Features:
-   ✅ Strict type checking enabled
-   ✅ Complete interfaces for all data structures
-   ✅ Path mapping for clean imports (@/config, @/services, etc.)
-   ✅ Type-safe database operations
-   ✅ Full OOP implementation with proper typing
-   ✅ Jest testing with TypeScript support
-
-🌐 Once running, your API will be available at:
-   http://localhost:3000
-
-💡 TypeScript Benefits:
-   - Compile-time error checking
-   - Better IDE support with IntelliSense
-   - Self-documenting code with interfaces
-   - Reduced runtime errors
-   - Enhanced developer experience
-
-Happy coding with TypeScript! 🚀
-"
+## Deposit Flow (Webhook Processing)
+sequenceDiagram
+    participant ExternalBank
+    participant RavenAPI
+    participant Webhook
+    participant API
+    participant WebhookService
+    participant TransactionService
+    participant Database
+    
+    Note over ExternalBank, Database: Customer deposits money
+    
+    ExternalBank->>RavenAPI: Customer deposits ₦1000
+    RavenAPI->>RavenAPI: Process deposit
+    RavenAPI->>Webhook: POST /webhook (deposit.successful)
+    
+    Webhook->>API: POST /api/webhook
+    API->>WebhookService: processWebhook(payload)
+    
+    WebhookService->>Database: Store webhook event
+    WebhookService->>TransactionService: processWebhookDeposit(data)
+    
+    TransactionService->>Database: Find user by account number
+    TransactionService->>Database: Create deposit transaction
+    TransactionService->>Database: Update user balance (+₦1000)
+    
+    TransactionService-->>WebhookService: Deposit processed
+    WebhookService->>Database: Mark webhook as processed
+    WebhookService-->>API: Processing complete
+    API-->>Webhook: 200 OK
