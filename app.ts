@@ -22,9 +22,9 @@ export class App {
     this.app.use(cors());
 
     // Rate limiting
-    this.app.use('/api/v1/auth', RateLimitMiddleware.auth());
-    this.app.use('/api/webhook', RateLimitMiddleware.webhook());
-    this.app.use('/api', RateLimitMiddleware.api());
+    // this.app.use('/api/v1/auth', RateLimitMiddleware.auth());
+    // this.app.use('/api/webhook', RateLimitMiddleware.webhook());
+    // this.app.use('/api', RateLimitMiddleware.api());
 
     // Body parsing middleware
     this.app.use(express.json({ limit: '10mb' }));
