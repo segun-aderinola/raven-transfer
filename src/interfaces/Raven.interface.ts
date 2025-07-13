@@ -1,5 +1,8 @@
 export interface IRavenAccountData {
-    name: string;
+    first_name: string;
+    last_name: string;
+    bvn: string;
+    nin: string;
     email: string;
     phone?: string;
   }

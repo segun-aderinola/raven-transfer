@@ -1,18 +1,19 @@
 import bcrypt from 'bcryptjs';
 import { BaseModel } from './BaseModel';
 import { IUser, ICreateUser, IUserWithoutPassword } from '@/interfaces/User.interface';
+import { Knex } from 'knex';
 
 export class User extends BaseModel<IUser> {
   constructor() {
     super('users');
   }
 
-  public async createUser(userData: ICreateUser): Promise<IUserWithoutPassword> {
+  public async createUser(userData: ICreateUser, trx?: Knex.Transaction ): Promise<IUserWithoutPassword> {
     const hashedPassword = await bcrypt.hash(userData.password, 10);
     const user = await this.create({
       ...userData,
       password: hashedPassword
-    });
+    }, trx);
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }

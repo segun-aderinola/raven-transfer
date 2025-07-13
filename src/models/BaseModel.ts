@@ -14,13 +14,15 @@ export abstract class BaseModel<T = any> {
     return await this.db(this.tableName).select('*');
   }
 
-  public async findById(id: number): Promise<T | undefined> {
-    return await this.db(this.tableName).where({ id }).first();
+  public async findById(id: number, trx?: Knex.Transaction): Promise<T> {
+    const query = trx ? trx(this.tableName) : this.db(this.tableName);
+    return await query.where('id', id).first();
   }
 
-  public async create(data: Partial<T>): Promise<T> {
-    const [id] = await this.db(this.tableName).insert(data);
-    return await this.findById(id!) as T;
+  public async create(data: Partial<T>, trx?: Knex.Transaction): Promise<T> {
+    const query = trx ? trx(this.tableName) : this.db(this.tableName);
+    const [id] = await query.insert(data);
+    return await this.findById(id!, trx) as T;
   }
 
   public async update(id: number, data: Partial<T>): Promise<T> {

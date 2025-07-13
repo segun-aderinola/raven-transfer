@@ -4,6 +4,7 @@ import { BankAccountService } from './WalletAccountService';
 import { RegisterDto, LoginDto } from '@/dto/AuthDto';
 import { IUserWithoutPassword } from '@/interfaces/User.interface';
 import { JwtPayload } from '@/types';
+import database from '@/config/database';
 
 interface AuthResult {
   user: IUserWithoutPassword;
@@ -21,26 +22,33 @@ export class AuthService {
 
   public async register(userData: any): Promise<AuthResult> {
     const registerDto = new RegisterDto(userData);
+    const db = database.getConnection();
+    const trx = await db.transaction();
     
-    // Check if user exists
-    const existingUser = await this.userModel.findByEmail(registerDto.email);
-    if (existingUser) {
-      throw new Error('User already exists');
+    try {
+      const existingUser = await this.userModel.findByEmail(registerDto.email);
+      if (existingUser) {
+        await trx.rollback();
+        throw new Error('User already exists');
+      }
+
+      // call BVN and NIN validation services here
+      // Assuming validation is successful, proceed with user creation
+
+      const user = await this.userModel.createUser(registerDto, trx);
+      await this.bankAccountService.createVirtualAccount(user, trx);
+      await trx.commit();
+  
+      const token = this.generateToken(user);
+  
+      return {
+        user,
+        token
+      };
+    } catch (error) {
+      await trx.rollback();
+      throw error;
     }
-
-    // Create user
-    const user = await this.userModel.createUser(registerDto);
-    
-    // Create virtual bank account
-    await this.bankAccountService.createVirtualAccount(user);
-
-    // Generate token
-    const token = this.generateToken(user);
-
-    return {
-      user,
-      token
-    };
   }
 
   public async login(credentials: any): Promise<AuthResult> {

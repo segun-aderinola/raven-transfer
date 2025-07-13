@@ -2,6 +2,7 @@ import { Wallet } from '@/models/Wallet';
 import { RavenService } from './RavenService';
 import { IWalletAccount, ICreateWalletAccount } from '@/interfaces/WalletAccount.interface';
 import { IUserWithoutPassword } from '@/interfaces/User.interface';
+import { Knex } from 'knex';
 
 export class BankAccountService {
   private walletModel: Wallet;
@@ -12,10 +13,13 @@ export class BankAccountService {
     this.ravenService = new RavenService();
   }
 
-  public async createVirtualAccount(user: IUserWithoutPassword): Promise<IWalletAccount> {
+  public async createVirtualAccount(user: IUserWithoutPassword, trx?: Knex.Transaction): Promise<IWalletAccount> {
     try {
       const ravenAccount = await this.ravenService.createVirtualAccount({
-        name: `${user.first_name} ${user.last_name}`,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        bvn: user.bvn,
+        nin: user.nin,
         email: user.email,
         phone: user.phone
       });
@@ -29,7 +33,7 @@ export class BankAccountService {
         raven_account_id: ravenAccount.id
       };
 
-      const bankAccount = await this.walletModel.create(walletAccountData);
+      const bankAccount = await this.walletModel.create(walletAccountData, trx);
       return bankAccount;
     } catch (error: any) {
       throw new Error(`Failed to create virtual account: ${error.message}`);
