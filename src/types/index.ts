@@ -45,3 +45,5 @@ export interface DatabaseConfig {
   export type UserStatus = 'active' | 'inactive' | 'suspended';
   export type AccountStatus = 'active' | 'inactive' | 'suspended';
   export type WebhookStatus = 'received' | 'processed' | 'failed';
+
+  import './express';

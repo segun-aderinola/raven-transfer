@@ -2,9 +2,16 @@
   "name": "raven-transfer",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start:dev": "nodemon src/app.ts",
+    "start": "node dist/app.js",
+    "build": "tsc",
+    "knex": "ts-node -r dotenv/config ./node_modules/knex/bin/cli.js",
+    "db:migrate:make": "npm run knex -- migrate:make",
+    "db:migrate": "npm run knex -- migrate:latest",
+    "db:migrate:rollback": "npm run knex -- migrate:rollback",
+    "db:seed": "npm run knex -- seed:run"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +28,8 @@
     "jsonwebtoken": "^9.0.2",
     "knex": "^3.1.0",
     "mysql2": "^3.14.2",
+    "sqlite3": "^5.1.7",
+    "tsconfig-paths": "^4.2.0",
     "uuid": "^11.1.0",
     "winston": "^3.17.0"
   },
