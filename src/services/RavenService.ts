@@ -47,7 +47,7 @@ export class RavenService {
           account_number: randomAccountNumber,
           account_name: data.first_name + ' ' + data.last_name,
           bank_name: 'Raven Bank',
-          bank_code: 'RAVEN',
+          bank_code: '00001',
           id: generateId()
         } as IRavenAccount;
       }

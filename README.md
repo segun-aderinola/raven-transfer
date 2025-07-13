@@ -4,7 +4,6 @@ A fintech money transfer application built with Node.js, Express, TypeScript, an
 
 ## Features
 
-- **TypeScript**: Full TypeScript implementation with strict type checking
 - User authentication (register/login)
 - Virtual bank account generation
 - Money transfers to other banks
@@ -12,7 +11,6 @@ A fintech money transfer application built with Node.js, Express, TypeScript, an
 - Transaction history tracking
 - Comprehensive API with proper error handling
 - Rate limiting and security middleware
-- Complete type safety and interfaces
 
 ## Tech Stack
 
@@ -31,16 +29,9 @@ A fintech money transfer application built with Node.js, Express, TypeScript, an
 3. Setup environment variables: `cp .env.example .env`
 4. Configure your environment variables in `.env`
 5. Build the application: `npm run build`
-6. Run database migrations: `npm run migrate`
-7. Start the application: `npm run dev`
+6. Run database migrations: `npm run db:migrate`
+7. Start the application: `npm run start:dev`
 
-## Scripts
-
-- `npm run build` - Build TypeScript to JavaScript
-- `npm run dev` - Start development server with hot reload
-- `npm start` - Start production server
-- `npm run migrate` - Run database migrations
-- `npm run migrate:rollback` - Rollback database migrations
 
 ## API Endpoints
 
@@ -83,11 +74,3 @@ RAVEN_BASE_URL=https://integrations.getravenbank.com
 WEBHOOK_URL=https://webhook-url.com/webhook
 ```
 
-## Development
-
-1. Register on https://atlas.getravenbank.com and get your API credentials
-2. Set up webhook.site for testing webhook endpoints
-3. Configure your `.env` file with the obtained credentials
-4. Run `npm run build` to compile TypeScript
-5. Run database migrations with `npm run migrate`
-6. Start the development server with `npm run dev`
