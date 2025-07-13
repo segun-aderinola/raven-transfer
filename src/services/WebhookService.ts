@@ -66,7 +66,7 @@ export class WebhookService {
         status: 'failed'
       });
       // Refund user balance
-      await this.transactionService.userModel.updateBalance(transaction.user_id, transaction.amount);
+      await this.transactionService.walletModel.updateBalance(transaction.user_id, transaction.amount);
     }
   }
 

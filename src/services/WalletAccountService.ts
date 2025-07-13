@@ -1,18 +1,18 @@
-import { BankAccount } from '@/models/BankAccount';
+import { Wallet } from '@/models/Wallet';
 import { RavenService } from './RavenService';
-import { IBankAccount, ICreateBankAccount } from '@/interfaces/BankAccount.interface';
+import { IWalletAccount, ICreateWalletAccount } from '@/interfaces/WalletAccount.interface';
 import { IUserWithoutPassword } from '@/interfaces/User.interface';
 
 export class BankAccountService {
-  private bankAccountModel: BankAccount;
+  private walletModel: Wallet;
   private ravenService: RavenService;
 
   constructor() {
-    this.bankAccountModel = new BankAccount();
+    this.walletModel = new Wallet();
     this.ravenService = new RavenService();
   }
 
-  public async createVirtualAccount(user: IUserWithoutPassword): Promise<IBankAccount> {
+  public async createVirtualAccount(user: IUserWithoutPassword): Promise<IWalletAccount> {
     try {
       const ravenAccount = await this.ravenService.createVirtualAccount({
         name: `${user.first_name} ${user.last_name}`,
@@ -20,7 +20,7 @@ export class BankAccountService {
         phone: user.phone
       });
 
-      const bankAccountData: ICreateBankAccount = {
+      const walletAccountData: ICreateWalletAccount = {
         user_id: user.id,
         account_number: ravenAccount.account_number,
         account_name: ravenAccount.account_name,
@@ -29,18 +29,18 @@ export class BankAccountService {
         raven_account_id: ravenAccount.id
       };
 
-      const bankAccount = await this.bankAccountModel.create(bankAccountData);
+      const bankAccount = await this.walletModel.create(walletAccountData);
       return bankAccount;
     } catch (error: any) {
       throw new Error(`Failed to create virtual account: ${error.message}`);
     }
   }
 
-  public async getUserBankAccounts(userId: number): Promise<IBankAccount[]> {
-    return await this.bankAccountModel.findByUserId(userId);
+  public async getUserBankAccounts(userId: number): Promise<IWalletAccount> {
+    return await this.walletModel.findByUserId(userId);
   }
 
-  public async getBankAccount(accountNumber: string): Promise<IBankAccount | undefined> {
-    return await this.bankAccountModel.findByAccountNumber(accountNumber);
+  public async getBankAccount(accountNumber: string): Promise<IWalletAccount | undefined> {
+    return await this.walletModel.findByAccountNumber(accountNumber);
   }
 }

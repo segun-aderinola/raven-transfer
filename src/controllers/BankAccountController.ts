@@ -1,5 +1,5 @@
 import { Response, Request } from 'express';
-import { BankAccountService } from '@/services/BankAccountService';
+import { BankAccountService } from '@/services/WalletAccountService';
 import { ResponseDto } from '@/dto/ResponseDto';
 import { AuthenticatedRequest } from '@/middleware/AuthMiddleware';
 

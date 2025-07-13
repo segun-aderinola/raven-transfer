@@ -24,10 +24,4 @@ export class User extends BaseModel<IUser> {
   public async verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
     return await bcrypt.compare(plainPassword, hashedPassword);
   }
-
-  public async updateBalance(userId: number, amount: number): Promise<void> {
-    await this.db(this.tableName)
-      .where({ id: userId })
-      .increment('balance', amount);
-  }
 }

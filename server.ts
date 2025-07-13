@@ -12,23 +12,20 @@ export class Server {
   private server?: HttpServer;
 
   constructor() {
-    this.port = parseInt(process.env.PORT || '3000');
+    this.port = Number(process.env.PORT);
     this.app = new App();
   }
 
   public async start(): Promise<void> {
     try {
-      // Test database connection
       await database.testConnection();
       logger.info('Database connected successfully');
 
-      // Start server
       this.server = this.app.getApp().listen(this.port, () => {
         logger.info(`Server running on port ${this.port}`);
         console.log(`Server: http://localhost:${this.port}`);
       });
 
-      // Graceful shutdown
       process.on('SIGTERM', this.shutdown.bind(this));
       process.on('SIGINT', this.shutdown.bind(this));
 

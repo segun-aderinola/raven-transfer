@@ -22,7 +22,7 @@ export class App {
     this.app.use(cors());
 
     // Rate limiting
-    this.app.use('/api/auth', RateLimitMiddleware.auth());
+    this.app.use('/api/v1/auth', RateLimitMiddleware.auth());
     this.app.use('/api/webhook', RateLimitMiddleware.webhook());
     this.app.use('/api', RateLimitMiddleware.api());
 
@@ -42,7 +42,7 @@ export class App {
 
   private initializeRoutes(): void {
     const routes = new Routes();
-    this.app.use('/api', routes.getRouter());
+    this.app.use('/api/v1', routes.getRouter());
 
     // Root endpoint
     this.app.get('/', (req: Request, res: Response) => {

@@ -1,15 +1,16 @@
+// src/config/knexfile.ts
 import path from 'path';
 import dotenv from 'dotenv';
 import { DatabaseConfig } from '@/types';
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
-export const configs: Record<string, DatabaseConfig> = {
+const configs: Record<string, DatabaseConfig> = {
   development: {
     client: 'mysql2',
     connection: {
       host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '3306'),
+      port: Number(process.env.DB_PORT || '3306'),
       database: process.env.DB_NAME || 'raven_pay',
       user: process.env.DB_USER || 'root',
       password: process.env.DB_PASSWORD || '',
@@ -39,3 +40,9 @@ export const configs: Record<string, DatabaseConfig> = {
     },
   },
 };
+
+// Export default configuration based on NODE_ENV
+export default configs[process.env.NODE_ENV || 'development'];
+
+// Also export the configs object for programmatic use
+export { configs };

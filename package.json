@@ -4,13 +4,14 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start:dev": "nodemon src/app.ts",
-    "start": "node dist/app.js",
+    "start:dev": "nodemon src/server.ts",
+    "start": "node dist/server.js",
     "build": "tsc",
-    "knex": "ts-node -r dotenv/config ./node_modules/knex/bin/cli.js",
+    "knex": "ts-node -r dotenv/config ./node_modules/knex/bin/cli.js --knexfile src/config/knexfile.ts",
     "db:migrate:make": "npm run knex -- migrate:make",
     "db:migrate": "npm run knex -- migrate:latest",
     "db:migrate:rollback": "npm run knex -- migrate:rollback",
+    "db:seed:make": "npm run knex -- seed:make",
     "db:seed": "npm run knex -- seed:run"
   },
   "keywords": [],

@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { User } from '@/models/User';
-import { BankAccountService } from './BankAccountService';
+import { BankAccountService } from './WalletAccountService';
 import { RegisterDto, LoginDto } from '@/dto/AuthDto';
 import { IUserWithoutPassword } from '@/interfaces/User.interface';
 import { JwtPayload } from '@/types';

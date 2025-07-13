@@ -5,15 +5,16 @@ import { RavenService } from './RavenService';
 import { TransferDto, DepositDto } from '@/dto/TransactionDto';
 import { ITransaction, ICreateTransaction } from '@/interfaces/Transaction.interface';
 import { TransactionType } from '@/types';
+import { Wallet } from '@/models/Wallet';
 
 export class TransactionService {
   public transactionModel: Transaction;
-  public userModel: User;
+  public walletModel: Wallet;
   private ravenService: RavenService;
 
   constructor() {
     this.transactionModel = new Transaction();
-    this.userModel = new User();
+    this.walletModel = new Wallet();
     this.ravenService = new RavenService();
   }
 
@@ -21,8 +22,8 @@ export class TransactionService {
     const transferDto = new TransferDto(transferData);
     
     // Check user balance
-    const user = await this.userModel.findById(userId);
-    if (!user || user.balance < transferDto.amount) {
+    const wallet = await this.walletModel.findByUserId(userId);
+    if (!wallet || wallet.balance < transferDto.amount) {
       throw new Error('Insufficient balance');
     }
 
@@ -70,7 +71,7 @@ export class TransactionService {
       });
 
       // Deduct from user balance
-      await this.userModel.updateBalance(userId, -transferDto.amount);
+      await this.walletModel.updateBalance(userId, -transferDto.amount);
 
       return await this.transactionModel.findById(transaction.id) as ITransaction;
     } catch (error: any) {
@@ -100,7 +101,7 @@ export class TransactionService {
     const { reference, amount, status, account_number } = webhookData;
 
     // Find user by account number
-    const { BankAccountService } = await import('./BankAccountService');
+    const { BankAccountService } = await import('./WalletAccountService');
     const bankAccountService = new BankAccountService();
     const bankAccount = await bankAccountService.getBankAccount(account_number);
 
@@ -123,7 +124,7 @@ export class TransactionService {
 
     // Update user balance if successful
     if (status === 'successful') {
-      await this.userModel.updateBalance(bankAccount.user_id, amount);
+      await this.walletModel.updateBalance(bankAccount.user_id, amount);
     }
 
     return transaction;

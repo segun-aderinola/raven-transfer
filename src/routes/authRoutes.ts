@@ -15,21 +15,18 @@ export class AuthRoutes {
   }
 
   private initializeRoutes(): void {
-    // POST /api/auth/register
     this.router.post(
       '/register',
       ValidationMiddleware.validate(AuthValidator.validateRegister),
       this.authController.register.bind(this.authController)
     );
 
-    // POST /api/auth/login
     this.router.post(
       '/login',
       ValidationMiddleware.validate(AuthValidator.validateLogin),
       this.authController.login.bind(this.authController)
     );
 
-    // GET /api/auth/profile
     this.router.get(
       '/profile',
       AuthMiddleware.authenticate,
