@@ -1,22 +1,23 @@
 export class TransferDto {
-    public recipient_account: string;
-    public recipient_bank: string;
+    public account_number: string;
+    public bank: string;
+    public bank_code: string;
     public amount: number;
-    public description?: string;
-    public currency: string;
+    public account_name: string;
+    
   
     constructor(data: {
-      recipient_account: string;
-      recipient_bank: string;
+      account_number: string;
+      bank: string;
+      bank_code: string;
       amount: number;
-      description?: string;
-      currency?: string;
+      account_name: string
     }) {
-      this.recipient_account = data.recipient_account;
-      this.recipient_bank = data.recipient_bank;
+      this.account_number = data.account_number;
+      this.bank = data.bank;
+      this.bank_code = data.bank_code;
       this.amount = data.amount;
-      this.description = data.description;
-      this.currency = data.currency || 'NGN';
+      this.account_name = data.account_name;
     }
   }
   

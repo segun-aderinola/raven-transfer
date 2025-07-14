@@ -3,6 +3,7 @@ import { AuthService } from '@/services/AuthService';
 import { ResponseDto } from '@/dto/ResponseDto';
 import { User } from '@/models/User';
 import { Wallet } from '@/models/Wallet';
+import database from '@/config/database';
 
 export class AuthController {
   private authService: AuthService;
@@ -34,7 +35,9 @@ export class AuthController {
       const userModel = new User();
       const walletModel = new Wallet();
       const user = await userModel.findById(req.user!.id);
-      const wallet = await walletModel.findByUserId(req.user!.id);
+      const db = database.getConnection();
+      const trx = await db.transaction();
+      const wallet = await walletModel.findByUserId(req.user!.id,trx);
       if (!user) {
         res.status(404).json(ResponseDto.error('User not found'));
         return;

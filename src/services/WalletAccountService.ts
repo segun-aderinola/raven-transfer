@@ -40,10 +40,6 @@ export class BankAccountService {
     }
   }
 
-  public async getUserBankAccounts(userId: number): Promise<IWalletAccount> {
-    return await this.walletModel.findByUserId(userId);
-  }
-
   public async getBankAccount(accountNumber: string): Promise<IWalletAccount | undefined> {
     return await this.walletModel.findByAccountNumber(accountNumber);
   }

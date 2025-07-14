@@ -2,12 +2,34 @@ import { Response, Request } from 'express';
 import { TransactionService } from '@/services/TransactionService';
 import { ResponseDto } from '@/dto/ResponseDto';
 import { AuthenticatedRequest } from '@/middleware/AuthMiddleware';
+import { RavenService } from '@/services/RavenService';
 
 export class TransactionController {
   private transactionService: TransactionService;
+  private raveService: RavenService;
 
   constructor() {
     this.transactionService = new TransactionService();
+    this.raveService = new RavenService();
+  }
+
+
+  public async fetchBanks(req: Request, res: Response): Promise<void> {
+    try {
+      const banks = await this.raveService.getBanks();
+      res.status(200).json(ResponseDto.success('Banks fetched successfully', banks));
+    } catch (error: any) {
+      res.status(400).json(ResponseDto.error(error.message));
+    }
+  }
+
+  public async resolveAccountNumber(req: Request, res: Response): Promise<void> {
+    try {
+      const resolve_account = await this.raveService.verifyAccount(req.body.account_number, req.body.bank_code);
+      res.status(200).json(ResponseDto.success('Account Resolved successfully', resolve_account));
+    } catch (error: any) {
+      res.status(400).json(ResponseDto.error(error.message));
+    }
   }
 
   public async initiateTransfer(req: Request, res: Response): Promise<void> {

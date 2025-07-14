@@ -6,11 +6,11 @@ export interface ITransaction {
   reference: string;
   type: TransactionType;
   amount: number;
-  currency: string;
   status: TransactionStatus;
   description?: string;
   recipient_account?: string;
   recipient_bank?: string;
+  recipient_bank_code?: string;
   raven_transaction_id?: string;
   metadata?: Record<string, any>;
   created_at: Date;
@@ -22,9 +22,9 @@ export interface ICreateTransaction {
   reference: string;
   type: TransactionType;
   amount: number;
-  currency?: string;
   description?: string;
   recipient_account?: string;
   recipient_bank?: string;
+  recipient_bank_code?: string;
   status?: TransactionStatus;
 }

@@ -1,6 +1,7 @@
 import { BaseModel } from './BaseModel';
-import { ITransaction } from '@/interfaces/Transaction.interface';
+import { ICreateTransaction, ITransaction } from '@/interfaces/Transaction.interface';
 import { TransactionType } from '@/types';
+import { Knex } from 'knex';
 
 export class Transaction extends BaseModel<ITransaction> {
   constructor() {
@@ -9,10 +10,6 @@ export class Transaction extends BaseModel<ITransaction> {
 
   public async findByUserId(userId: number): Promise<ITransaction[]> {
     return await this.findBy({ user_id: userId } as Partial<ITransaction>);
-  }
-
-  public async findByReference(reference: string): Promise<ITransaction | undefined> {
-    return await this.findOneBy({ reference } as Partial<ITransaction>);
   }
 
   public async findByType(userId: number, type: TransactionType): Promise<ITransaction[]> {
@@ -29,5 +26,14 @@ export class Transaction extends BaseModel<ITransaction> {
       .orderBy('created_at', 'desc')
       .limit(limit)
       .offset(offset);
+  }
+
+  public async findByIdempotencyKey(idempotencyKey: string, trx?: Knex.Transaction): Promise<ITransaction | null> {
+    const result = await this.findOneBy({ reference: idempotencyKey } as Partial<ITransaction>, trx);
+    return result ?? null;
+  }
+
+  public override async create(data: ICreateTransaction, trx?: Knex.Transaction): Promise<ITransaction> {
+    return await super.create(data, trx);
   }
 }

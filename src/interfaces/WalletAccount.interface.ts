@@ -6,6 +6,7 @@ export interface IWalletAccount {
   account_number: string;
   account_name: string;
   balance: number;
+  locked_amount: number;
   bank_name: string;
   bank_code: string;
   raven_account_id?: string;

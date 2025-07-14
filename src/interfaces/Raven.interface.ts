@@ -10,12 +10,14 @@ export interface IRavenAccountData {
   export interface IRavenTransferData {
     amount: number;
     currency: string;
-    recipient_account: string;
-    recipient_bank: string;
+    account_number: string;
+    account_name: string;
+    bank: string;
+    bank_code: string;
     reference: string;
     description?: string;
   }
-  
+
   export interface IRavenResponse<T = any> {
     success: boolean;
     data: T;
@@ -32,9 +34,18 @@ export interface IRavenAccountData {
   
   export interface IRavenTransfer {
     id: string;
-    reference: string;
+    email: string;
+    trx_ref: string;
+    merchant_ref: string;
     amount: number;
     status: string;
+    bank: string;
+    bank_code: string;
+    account_number: string;
+    account_name: string;
+    narration: string;
+    fee: number;
+    created_at: any;
   }
   
   export interface IRavenAccountVerification {

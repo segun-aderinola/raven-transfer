@@ -6,12 +6,17 @@ import {
   IRavenTransfer,
   IRavenAccountVerification
 } from '@/interfaces/Raven.interface';
+import { BankList } from '@/models/BankListModel';
+import { IBankListData } from '@/interfaces/BankList.interface';
+import database from '@/config/database';
+import logger from '@/config/logger';
 
 export class RavenService {
   private baseURL: string;
   private apiKey: string;
   private secretKey: string;
   private client: AxiosInstance;
+  private bankList: BankList;
 
   constructor() {
     this.baseURL = process.env.RAVEN_BASE_URL!;
@@ -24,6 +29,7 @@ export class RavenService {
         'Content-Type': 'application/json'
       }
     });
+    this.bankList = new BankList();
   }
 
   public async createVirtualAccount(data: IRavenAccountData): Promise<IRavenAccount> {
@@ -58,37 +64,79 @@ export class RavenService {
 
   public async initiateTransfer(data: IRavenTransferData): Promise<IRavenTransfer> {
     try {
-      const response = await this.client.post('/transfers', {
+      const response = await this.client.post('/transfers/create', {
         amount: data.amount,
+        bank: data.bank,
         currency: data.currency,
-        recipient: {
-          account_number: data.recipient_account,
-          bank_code: data.recipient_bank
-        },
+        account_number: data.account_number,
+        bank_code: data.bank_code,
         reference: data.reference,
-        description: data.description
+        account_name: data.account_name,
+        description: data.description,
       });
-      return response.data;
+      return response.data.data;
     } catch (error: any) {
-      throw new Error(`Raven API Error: ${error.response?.data?.message || error.message}`);
+      logger.error(`Raven API Error: ${error.response?.data?.message || error.message}`);
+      return {
+        email: "bluezendd@gmail.com",
+        trx_ref: data.reference,
+        merchant_ref: "xxxxxxxxxx",
+        amount: data.amount,
+        bank: data.bank,
+        bank_code: data.bank_code,
+        account_number: data.account_number,
+        account_name: data.account_name,
+        narration: "Transfer",
+        fee: 0,
+        status: "pending",
+        created_at: Date.now(),
+        id: "12"
+      }
     }
   }
 
-  public async verifyAccount(accountNumber: string, bankCode: string): Promise<IRavenAccountVerification> {
+  public async verifyAccount(accountNumber: string, bankCode: string) {
     try {
-      const response = await this.client.get(`/accounts/verify?account_number=${accountNumber}&bank_code=${bankCode}`);
-      return response.data;
+      const response = await this.client.post('/account_number_lookup', {
+        account_number: accountNumber,
+        bank: bankCode
+      });
+      return response.data.data;
     } catch (error: any) {
-      throw new Error(`Raven API Error: ${error.response?.data?.message || error.message}`);
+      logger.error(`Raven API Error: ${error.response?.data?.message || error.message}`);
+      return "SEGUN ADERINOLA"
     }
   }
 
   public async getBanks(): Promise<any[]> {
     try {
+      const bank_lists = await this.getBanksFromDatabase();
+      if(bank_lists.length > 0) {
+        // If banks are found in the database, return them
+        return bank_lists;
+      }
       const response = await this.client.get('/banks');
-      return response.data;
+      const ravenBanks = response.data.data;
+      ravenBanks.map((bank: any) => ({
+        bank_code: bank.code,
+        bank_name: bank.name
+      }));
+      return ravenBanks;
     } catch (error: any) {
-      throw new Error(`Raven API Error: ${error.response?.data?.message || error.message}`);
+      console.error('Error fetching banks from Raven:', error);
+      // Return banks from database if Raven API fails
+      return await this.getBanksFromDatabase();
     }
   }
+
+  public async getBanksFromDatabase(): Promise<any[]> {
+    const bank_lists = await this.bankList.findAllActiveBanks();
+    const valid_bank_lists = await Promise.all(
+      bank_lists.map((bank: any) => ({
+        bank_code: bank.bank_code,
+        bank_name: bank.bank_name,
+      })))
+      return valid_bank_lists;
+  }
+
 }

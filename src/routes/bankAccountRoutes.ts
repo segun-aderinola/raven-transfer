@@ -14,11 +14,11 @@ export class BankAccountRoutes {
 
   private initializeRoutes(): void {
     // GET /api/bank-accounts
-    this.router.get(
-      '/',
-      AuthMiddleware.authenticate,
-      this.bankAccountController.getUserBankAccounts.bind(this.bankAccountController)
-    );
+    // this.router.get(
+    //   '/',
+    //   AuthMiddleware.authenticate,
+    //   this.bankAccountController.getUserBankAccounts.bind(this.bankAccountController)
+    // );
   }
 
   public getRouter(): Router {

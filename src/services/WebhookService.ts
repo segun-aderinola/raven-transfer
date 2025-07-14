@@ -1,6 +1,7 @@
 import { Webhook } from '@/models/Webhook';
 import { TransactionService } from './TransactionService';
 import { IWebhook, ICreateWebhook } from '@/interfaces/Webhook.interface';
+import database from '@/config/database';
 
 export class WebhookService {
   private webhookModel: Webhook;
@@ -65,8 +66,10 @@ export class WebhookService {
       await this.transactionService.transactionModel.update(transaction.id, {
         status: 'failed'
       });
+      const db = database.getConnection();
+      const trx = await db.transaction();
       // Refund user balance
-      await this.transactionService.walletModel.updateBalance(transaction.user_id, transaction.amount);
+      await this.transactionService.walletModel.addBalance(transaction.user_id, transaction.amount, trx);
     }
   }
 

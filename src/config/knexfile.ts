@@ -1,4 +1,3 @@
-// src/config/knexfile.ts
 import path from 'path';
 import dotenv from 'dotenv';
 import { DatabaseConfig } from '@/types';
@@ -41,8 +40,5 @@ const configs: Record<string, DatabaseConfig> = {
   },
 };
 
-// Export default configuration based on NODE_ENV
 export default configs[process.env.NODE_ENV || 'development'];
-
-// Also export the configs object for programmatic use
 export { configs };

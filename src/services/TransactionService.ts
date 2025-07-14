@@ -1,11 +1,12 @@
-import { v4 as uuidv4 } from 'uuid';
+import crypto from "crypto"
 import { Transaction } from '@/models/Transaction';
-import { User } from '@/models/User';
 import { RavenService } from './RavenService';
 import { TransferDto, DepositDto } from '@/dto/TransactionDto';
 import { ITransaction, ICreateTransaction } from '@/interfaces/Transaction.interface';
 import { TransactionType } from '@/types';
 import { Wallet } from '@/models/Wallet';
+import database from '@/config/database';
+import logger from '@/config/logger';
 
 export class TransactionService {
   public transactionModel: Transaction;
@@ -20,70 +21,84 @@ export class TransactionService {
 
   public async initiateTransfer(userId: number, transferData: any): Promise<ITransaction> {
     const transferDto = new TransferDto(transferData);
+    const db = database.getConnection();
     
-    // Check user balance
-    const wallet = await this.walletModel.findByUserId(userId);
-    if (!wallet || wallet.balance < transferDto.amount) {
-      throw new Error('Insufficient balance');
+    const idempotencyKey = crypto.randomUUID() + '_' + Date.now();
+    
+    // Check if transfer with this idempotency key already exists
+    const existingTransfer = await this.transactionModel.findByIdempotencyKey(idempotencyKey);
+    if (existingTransfer) {
+      return existingTransfer;
     }
-
-    // Verify recipient account
-    const verification = await this.ravenService.verifyAccount(
-      transferDto.recipient_account,
-      transferDto.recipient_bank
-    );
-
-    if (!verification.valid) {
-      throw new Error('Invalid recipient account');
-    }
-
-    // Create transaction record
-    const reference = uuidv4();
-    const transactionData: ICreateTransaction = {
-      user_id: userId,
-      reference,
-      type: 'transfer',
-      amount: transferDto.amount,
-      currency: transferDto.currency,
-      description: transferDto.description,
-      recipient_account: transferDto.recipient_account,
-      recipient_bank: transferDto.recipient_bank,
-      status: 'pending'
-    };
-
-    const transaction = await this.transactionModel.create(transactionData);
-
-    // Initiate transfer via Raven
-    try {
-      const ravenTransfer = await this.ravenService.initiateTransfer({
-        amount: transferDto.amount,
-        currency: transferDto.currency,
-        recipient_account: transferDto.recipient_account,
-        recipient_bank: transferDto.recipient_bank,
-        reference,
-        description: transferDto.description
-      });
-
-      // Update transaction with Raven ID
-      await this.transactionModel.update(transaction.id, {
-        raven_transaction_id: ravenTransfer.id,
-        status: 'processing'
-      });
-
-      // Deduct from user balance
-      await this.walletModel.updateBalance(userId, -transferDto.amount);
-
-      return await this.transactionModel.findById(transaction.id) as ITransaction;
-    } catch (error: any) {
-      // Mark transaction as failed
-      await this.transactionModel.update(transaction.id, {
-        status: 'failed',
-        metadata: { error: error.message }
-      });
-      throw error;
-    }
+  
+    return await db.transaction(async (trx) => {
+      try {
+        // Lock wallet row for update to prevent concurrent modifications
+        const wallet = await this.walletModel.findByUserIdForUpdate(userId, trx);
+        if (!wallet) {
+          throw new Error('Wallet not found');
+        }
+  
+        const verification = await this.ravenService.verifyAccount(
+          transferDto.account_number,
+          transferDto.bank_code
+        );
+  
+        if (!verification.valid) {
+          throw new Error('Invalid recipient account');
+        }
+        
+        const transactionData: ICreateTransaction = {
+          user_id: userId,
+          reference: idempotencyKey,
+          type: 'transfer',
+          amount: transferDto.amount,
+          description: "Transfer",
+          recipient_account: transferDto.account_number,
+          recipient_bank: transferDto.bank_code,
+        };
+  
+        const transaction = await this.transactionModel.create(transactionData, trx);
+  
+        // Initiate transfer via Raven
+        try {
+          const ravenTransfer = await this.ravenService.initiateTransfer({
+            amount: transferDto.amount,
+            currency: "NGN",
+            account_number: transferDto.account_number,
+            bank: transferDto.bank,
+            bank_code: transferDto.bank_code,
+            account_name: transferDto.account_name,
+            reference: idempotencyKey,
+            description: `Transfer to ${transferDto.account_name}`,
+          });
+  
+          // Update transaction with Raven ID and set to processing
+          await this.transactionModel.update(transaction.id, {
+            raven_transaction_id: ravenTransfer.id,
+            status: 'processing'
+          }, trx);
+  
+          return await this.transactionModel.findById(transaction.id, trx) as ITransaction;
+  
+        } catch (ravenError: any) {
+          // If Raven API fails, unlock the amount and mark transaction as failed
+          await this.walletModel.unlockAmount(userId, transferDto.amount, trx);
+          
+          await this.transactionModel.update(transaction.id, {
+            status: 'failed',
+            metadata: { error: ravenError.message }
+          }, trx);
+  
+          throw new Error(`Transfer failed: ${ravenError.message}`);
+        }
+  
+      } catch (error: any) {
+        throw error;
+      }
+    });
   }
-
+  
   public async getUserTransactions(userId: number, limit: number = 50, offset: number = 0): Promise<ITransaction[]> {
     return await this.transactionModel.getUserTransactionHistory(userId, limit, offset);
   }
@@ -92,41 +107,57 @@ export class TransactionService {
     return await this.transactionModel.findByType(userId, type);
   }
 
-  public async getTransactionByReference(reference: string): Promise<ITransaction | undefined> {
-    return await this.transactionModel.findByReference(reference);
+  public async getTransactionByReference(reference: string): Promise<ITransaction | null> {
+    return await this.transactionModel.findByIdempotencyKey(reference);
   }
-
   public async processWebhookDeposit(webhookData: any): Promise<ITransaction> {
-    // Process deposit webhook from Raven
     const { reference, amount, status, account_number } = webhookData;
-
-    // Find user by account number
-    const { BankAccountService } = await import('./WalletAccountService');
-    const bankAccountService = new BankAccountService();
-    const bankAccount = await bankAccountService.getBankAccount(account_number);
-
-    if (!bankAccount) {
-      throw new Error('Bank account not found');
-    }
-
-    // Create deposit transaction
-    const transactionData: ICreateTransaction = {
-      user_id: bankAccount.user_id,
-      reference,
-      type: 'deposit',
-      amount,
-      currency: 'NGN',
-      status: status === 'successful' ? 'completed' : 'failed',
-      description: 'Bank transfer deposit'
-    };
-
-    const transaction = await this.transactionModel.create(transactionData);
-
-    // Update user balance if successful
-    if (status === 'successful') {
-      await this.walletModel.updateBalance(bankAccount.user_id, amount);
-    }
-
-    return transaction;
+    const db = database.getConnection();
+  
+    return await db.transaction(async (trx) => {
+      try {
+        // Find user by account number
+        const { BankAccountService } = await import('./WalletAccountService');
+        const bankAccountService = new BankAccountService();
+        const bankAccount = await bankAccountService.getBankAccount(account_number);
+  
+        if (!bankAccount) {
+          throw new Error('Bank account not found');
+        }
+  
+        // Check for duplicate processing (idempotency)
+        const existingTransaction = await this.transactionModel.findByIdempotencyKey(reference, trx);
+        if (existingTransaction) {
+          logger.error(`Deposit webhook already processed for reference: ${reference}`);
+          return existingTransaction;
+        }
+  
+        // Create deposit transaction
+        const transactionData: ICreateTransaction = {
+          user_id: bankAccount.user_id,
+          reference,
+          type: 'deposit',
+          amount,
+          status: status === 'successful' ? 'completed' : 'failed',
+          description: 'Bank transfer deposit',
+        };
+  
+        const transaction = await this.transactionModel.create(transactionData, trx);
+  
+        // ✅ ADD balance for successful deposits (not deduct!)
+        if (status === 'successful') {
+          await this.walletModel.addBalance(bankAccount.user_id, amount, trx);
+          
+          console.log(`✅ Deposit processed: $${amount} added to user ${bankAccount.user_id}`);
+        } else {
+          console.log(`❌ Deposit failed for user ${bankAccount.user_id}: ${webhookData.error || 'Unknown error'}`);
+        }
+  
+        return transaction;
+      } catch (error) {
+        console.error('Error processing deposit webhook:', error);
+        throw error;
+      }
+    });
   }
 }

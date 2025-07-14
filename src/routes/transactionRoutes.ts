@@ -15,36 +15,41 @@ export class TransactionRoutes {
   }
 
   private initializeRoutes(): void {
-    // POST /api/transactions/transfer
     this.router.post(
       '/transfer',
       AuthMiddleware.authenticate,
       ValidationMiddleware.validate(TransactionValidator.validateTransfer),
       this.transactionController.initiateTransfer.bind(this.transactionController)
     );
-
-    // GET /api/transactions/history
+    this.router.post(
+      '/resolve-account',
+      AuthMiddleware.authenticate,
+      ValidationMiddleware.validate(TransactionValidator.resolveAccountNumber),
+      this.transactionController.resolveAccountNumber.bind(this.transactionController)
+    );
+    this.router.get(
+      '/banks',
+      AuthMiddleware.authenticate,
+      this.transactionController.fetchBanks.bind(this.transactionController)
+    );
     this.router.get(
       '/history',
       AuthMiddleware.authenticate,
       this.transactionController.getTransactionHistory.bind(this.transactionController)
     );
 
-    // GET /api/transactions/deposits
     this.router.get(
       '/deposits',
       AuthMiddleware.authenticate,
       this.transactionController.getDeposits.bind(this.transactionController)
     );
 
-    // GET /api/transactions/transfers
     this.router.get(
       '/transfers',
       AuthMiddleware.authenticate,
       this.transactionController.getTransfers.bind(this.transactionController)
     );
 
-    // GET /api/transactions/:reference
     this.router.get(
       '/:reference',
       AuthMiddleware.authenticate,

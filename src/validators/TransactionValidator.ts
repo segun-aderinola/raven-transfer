@@ -1,24 +1,33 @@
 import Joi from 'joi';
 
+const transferSchema = Joi.object({
+  account_number: Joi.string().required(),
+  account_name: Joi.string().required(),
+  bank: Joi.string().required(),
+  bank_code: Joi.string().required(),
+  amount: Joi.number().positive().max(100).required(),
+  description: Joi.string().optional(),
+});
+
+const depositSchema = Joi.object({
+  amount: Joi.number().positive().max(100).required()
+});
+
+const resolveAccountNumberSchema = Joi.object({
+  bank_code: Joi.string().required(),
+  account_number: Joi.string().required()
+});
+
 export class TransactionValidator {
-  private static transferSchema = Joi.object({
-    recipient_account: Joi.string().required(),
-    recipient_bank: Joi.string().required(),
-    amount: Joi.number().positive().max(100).required(),
-    description: Joi.string().optional(),
-    currency: Joi.string().valid('NGN').default('NGN')
-  });
-
-  private static depositSchema = Joi.object({
-    amount: Joi.number().positive().max(100).required(),
-    currency: Joi.string().valid('NGN').default('NGN')
-  });
-
   public static validateTransfer(data: any): Joi.ValidationResult {
-    return this.transferSchema.validate(data);
+    return transferSchema.validate(data);
   }
 
   public static validateDeposit(data: any): Joi.ValidationResult {
-    return this.depositSchema.validate(data);
+    return depositSchema.validate(data);
+  }
+
+  public static resolveAccountNumber(data: any): Joi.ValidationResult {
+    return resolveAccountNumberSchema.validate(data);
   }
 }

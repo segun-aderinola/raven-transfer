@@ -30,7 +30,7 @@ export class Server {
       process.on('SIGINT', this.shutdown.bind(this));
 
     } catch (error) {
-      logger.error('Failed to start server:', error);
+      logger.error('Unable to connect to databse:', error);
       process.exit(1);
     }
   }
