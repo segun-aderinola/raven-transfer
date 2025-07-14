@@ -12,7 +12,7 @@ export interface ITransaction {
   recipient_bank?: string;
   recipient_bank_code?: string;
   raven_transaction_id?: string;
-  metadata?: Record<string, any>;
+  // metadata?: Record<string, any>;
   created_at: Date;
   updated_at: Date;
 }

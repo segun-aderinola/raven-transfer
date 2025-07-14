@@ -49,12 +49,6 @@ export class TransactionRoutes {
       AuthMiddleware.authenticate,
       this.transactionController.getTransfers.bind(this.transactionController)
     );
-
-    this.router.get(
-      '/:reference',
-      AuthMiddleware.authenticate,
-      this.transactionController.getTransactionByReference.bind(this.transactionController)
-    );
   }
 
   public getRouter(): Router {

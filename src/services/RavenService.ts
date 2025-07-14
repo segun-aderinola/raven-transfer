@@ -14,14 +14,12 @@ import logger from '@/config/logger';
 export class RavenService {
   private baseURL: string;
   private apiKey: string;
-  private secretKey: string;
   private client: AxiosInstance;
   private bankList: BankList;
 
   constructor() {
     this.baseURL = process.env.RAVEN_BASE_URL!;
     this.apiKey = process.env.RAVEN_API_KEY!;
-    this.secretKey = process.env.RAVEN_SECRET_KEY!;
     this.client = axios.create({
       baseURL: this.baseURL,
       headers: {
@@ -40,8 +38,7 @@ export class RavenService {
         bvn: data.bvn,
         nin: data.nin,
         fname: data.first_name,
-        lname: data.last_name,
-        webhook_url: process.env.WEBHOOK_URL
+        lname: data.last_name
       });
       return response.data;
     } catch (error: any) {

@@ -1,4 +1,4 @@
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 import { BaseModel } from './BaseModel';
 import { IUser, ICreateUser, IUserWithoutPassword } from '@/interfaces/User.interface';
 import { Knex } from 'knex';

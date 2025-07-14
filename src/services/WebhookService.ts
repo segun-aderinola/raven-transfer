@@ -14,11 +14,11 @@ export class WebhookService {
 
   public async processWebhook(payload: any): Promise<IWebhook> {
     const { event, data } = payload;
-
+    
     // Store webhook
     const webhookData: ICreateWebhook = {
       event_type: event,
-      reference: data.reference,
+      reference: payload.reference,
       payload: payload
     };
 

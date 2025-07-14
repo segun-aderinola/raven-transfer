@@ -72,20 +72,4 @@ export class TransactionController {
       res.status(500).json(ResponseDto.error(error.message));
     }
   }
-
-  public async getTransactionByReference(req: Request, res: Response): Promise<void> {
-    try {
-      const { reference } = req.params;
-      const transaction = await this.transactionService.getTransactionByReference(String(reference));
-      
-      if (!transaction || transaction.user_id !== req.user!.id) {
-        res.status(404).json(ResponseDto.error('Transaction not found'));
-        return;
-      }
-
-      res.json(ResponseDto.success('Transaction retrieved successfully', transaction));
-    } catch (error: any) {
-      res.status(500).json(ResponseDto.error(error.message));
-    }
-  }
 }

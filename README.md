@@ -1,4 +1,4 @@
-# Raven Transfer (TypeScript)
+# Raven Transfer
 
 A fintech money transfer application built with Node.js, Express, TypeScript, and Knex, integrated with Raven Atlas API for bank transfers and virtual account generation.
 
@@ -9,8 +9,6 @@ A fintech money transfer application built with Node.js, Express, TypeScript, an
 - Money transfers to other banks
 - Webhook handling for deposit notifications
 - Transaction history tracking
-- Comprehensive API with proper error handling
-- Rate limiting and security middleware
 
 ## Tech Stack
 
@@ -18,7 +16,6 @@ A fintech money transfer application built with Node.js, Express, TypeScript, an
 - **Database**: MySQL with Knex.js ORM
 - **Authentication**: JWT
 - **External API**: Raven Atlas
-- **Testing**: Jest, Supertest
 - **Architecture**: Object-Oriented Programming (OOP) with TypeScript
 
 
@@ -35,23 +32,25 @@ A fintech money transfer application built with Node.js, Express, TypeScript, an
 
 ## API Endpoints
 
+API URL: https://documenter.getpostman.com/view/20769634/2sB34hG1EF
+
 ### Authentication
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login user
-- `GET /api/auth/profile` - Get user profile (authenticated)
+- `POST /api/v1/auth/register` - Register a new user
+- `POST /api/v1/auth/login` - Login user
+- `GET /api/v1/auth/profile` - Get user profile (authenticated)
 
 ### Bank Accounts
-- `GET /api/bank-accounts` - Get user's bank accounts (authenticated)
+- `GET /api/v1/bank-accounts` - Get user's bank accounts (authenticated)
 
 ### Transactions
-- `POST /api/transactions/transfer` - Initiate money transfer (authenticated)
-- `GET /api/transactions/history` - Get transaction history (authenticated)
-- `GET /api/transactions/deposits` - Get deposit history (authenticated)
-- `GET /api/transactions/transfers` - Get transfer history (authenticated)
-- `GET /api/transactions/:reference` - Get transaction by reference (authenticated)
+- `POST /api/v1/transactions/transfer` - Initiate money transfer (authenticated)
+- `GET /api/v1/transactions/history` - Get transaction history (authenticated)
+- `GET /api/v1/transactions/deposits` - Get deposit history (authenticated)
+- `GET /api/v1/transactions/transfers` - Get transfer history (authenticated)
+- `GET /api/v1/transactions/:reference` - Get transaction by reference (authenticated)
 
 ### Webhooks
-- `POST /api/webhook` - Handle Raven Atlas webhooks
+- `POST /api/v1/webhook` - Handle Raven Atlas webhooks
 
 ### Utility
 - `GET /api/health` - Health check endpoint
@@ -62,15 +61,13 @@ A fintech money transfer application built with Node.js, Express, TypeScript, an
 ```
 NODE_ENV=development
 PORT=3000
-DB_HOST=localhost
+DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_NAME=raven_pay
 DB_USER=root
 DB_PASSWORD=
 JWT_SECRET=ravenpay
 RAVEN_API_KEY=your_raven_api_key
-RAVEN_SECRET_KEY=your_raven_secret_key
 RAVEN_BASE_URL=https://integrations.getravenbank.com
-WEBHOOK_URL=https://webhook-url.com/webhook
 ```
 

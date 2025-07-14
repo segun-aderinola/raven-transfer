@@ -1,6 +1,5 @@
 import { Router, Request, Response } from 'express';
 import { AuthRoutes } from './authRoutes';
-import { BankAccountRoutes } from './bankAccountRoutes';
 import { TransactionRoutes } from './transactionRoutes';
 import { WebhookRoutes } from './webhookRoutes';
 
@@ -15,9 +14,6 @@ export class Routes {
   private initializeRoutes(): void {
     const authRoutes = new AuthRoutes();
     this.router.use('/auth', authRoutes.getRouter());
-
-    const bankAccountRoutes = new BankAccountRoutes();
-    this.router.use('/bank-accounts', bankAccountRoutes.getRouter());
 
     const transactionRoutes = new TransactionRoutes();
     this.router.use('/transactions', transactionRoutes.getRouter());

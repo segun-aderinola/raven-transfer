@@ -12,7 +12,6 @@ export class WebhookRoutes {
   }
 
   private initializeRoutes(): void {
-    // POST /api/webhook
     this.router.post(
       '/',
       this.webhookController.handleWebhook.bind(this.webhookController)
