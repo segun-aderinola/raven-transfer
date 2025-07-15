@@ -39,9 +39,6 @@ API DOCUMENTATION URL: https://documenter.getpostman.com/view/20769634/2sB34hG1E
 - `POST /api/v1/auth/login` - Login user
 - `GET /api/v1/auth/profile` - Get user profile (authenticated)
 
-### Bank Accounts
-- `GET /api/v1/bank-accounts` - Get user's bank accounts (authenticated)
-
 ### Transactions
 - `POST /api/v1/transactions/transfer` - Initiate money transfer (authenticated)
 - `GET /api/v1/transactions/history` - Get transaction history (authenticated)
