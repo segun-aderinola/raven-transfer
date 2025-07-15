@@ -32,7 +32,7 @@ A fintech money transfer application built with Node.js, Express, TypeScript, an
 
 ## API Endpoints
 
-API URL: https://documenter.getpostman.com/view/20769634/2sB34hG1EF
+API DOCUMENTATION URL: https://documenter.getpostman.com/view/20769634/2sB34hG1EF
 
 ### Authentication
 - `POST /api/v1/auth/register` - Register a new user
